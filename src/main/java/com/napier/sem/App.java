@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class App {
     public static void main(String[] args) {
+
         String uri = System.getenv("MONGO_URI");
         if (uri == null || uri.isEmpty()) {
             uri = "mongodb://localhost:27017";
