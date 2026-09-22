@@ -1,14 +1,12 @@
+version: '3'
 services:
-  version: '3'
-  services:
+  # Application Dockerfile is in same folder which is .
+  app:
+    build: .
 
-    # Build app from Dockerfile in same folder
-    app:
-      build: .
-
-    # Build the db as name world from the Dockerfile in the db folder
-    # exposing the port if we want to run code outside a container
-    db:
-      build: db/.
-      ports:
-        - "33060:3306"
+  # db is is db folder
+  db:
+    build: db/.
+    restart: always
+    ports:
+      - "33060:3306"

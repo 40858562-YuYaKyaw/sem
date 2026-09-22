@@ -1,51 +1,62 @@
 package com.napier.sem;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import org.bson.Document;
+import java.sql.*;
 
-import java.util.concurrent.TimeUnit;
-
-public class App {
-    public static void main(String[] args) {
-        String uri = System.getenv("MONGO_URI");
-        if (uri == null || uri.isEmpty()) {
-            uri = "mongodb://localhost:27017";
+public class App
+{
+    public static void main(String[] args)
+    {
+        try
+        {
+            // Load Database driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
         }
-        System.out.println("Connecting to MongoDB at: " + uri);
+        catch (ClassNotFoundException e)
+        {
+            System.out.println("Could not load SQL driver");
+            System.exit(-1);
+        }
 
-        // Configure 3-second server selection timeout
-        MongoClientSettings settings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(uri))
-                .applyToClusterSettings(builder ->
-                        builder.serverSelectionTimeout(3000, TimeUnit.MILLISECONDS))
-                .build();
-
-        try (MongoClient mongoClient = MongoClients.create(settings)) {
-
-            MongoDatabase database = mongoClient.getDatabase("mydb");
-            MongoCollection<Document> collection = database.getCollection("test");
-
-            Document doc = new Document("name", "Kevin Sim")
-                    .append("class", "DevOps")
-                    .append("year", "2024")
-                    .append("result", new Document("CW", 95).append("EX", 85));
-
-            collection.insertOne(doc);
-            System.out.println("Successfully inserted document!");
-
-            Document myDoc = collection.find().first();
-            if (myDoc != null) {
-                System.out.println("\n--- Retrieved Document ---");
-                System.out.println(myDoc.toJson());
+        // Connection to the database
+        Connection con = null;
+        int retries = 100;
+        for (int i = 0; i < retries; ++i)
+        {
+            System.out.println("Connecting to database...");
+            try
+            {
+                // Wait a bit for db to start
+                Thread.sleep(30000);
+                // Connect to database
+                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?allowPublicKeyRetrieval=true&useSSL=false", "root", "example");
+                System.out.println("Successfully connected");
+                // Wait a bit
+                Thread.sleep(10000);
+                // Exit for loop
+                break;
             }
+            catch (SQLException sqle)
+            {
+                System.out.println("Failed to connect to database attempt " + Integer.toString(i));
+                System.out.println(sqle.getMessage());
+            }
+            catch (InterruptedException ie)
+            {
+                System.out.println("Thread interrupted? Should not happen.");
+            }
+        }
 
-        } catch (Exception e) {
-            System.err.println("\n[ERROR] Connection failed: " + e.getMessage());
+        if (con != null)
+        {
+            try
+            {
+                // Close connection
+                con.close();
+            }
+            catch (Exception e)
+            {
+                System.out.println("Error closing connection to database");
+            }
         }
     }
 }
