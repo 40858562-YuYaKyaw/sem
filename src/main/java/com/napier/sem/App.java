@@ -1,6 +1,8 @@
 package com.napier.sem;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App {
     /**
@@ -12,6 +14,10 @@ public class App {
      * Connect to the MySQL database.
      */
     public void connect() {
+        if (con != null) {
+            return;
+        }
+
         try {
             // Load Database driver
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -31,10 +37,12 @@ public class App {
                 System.out.println("Successfully connected");
                 break;
             } catch (SQLException sqle) {
-                System.out.println("Failed to connect to database attempt " + Integer.toString(i));
+                System.out.println("Failed to connect to database attempt " + i);
                 System.out.println(sqle.getMessage());
             } catch (InterruptedException ie) {
-                System.out.println("Thread interrupted? Should not happen.");
+                Thread.currentThread().interrupt();
+                System.out.println("Thread interrupted while waiting to connect to the database.");
+                return;
             }
         }
     }
@@ -99,6 +107,39 @@ public class App {
         }
     }
 
+    public List<Employee> getEmployeesByRole(String titleRole) {
+        try {
+            Statement stmt = con.createStatement();
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
+                            "FROM employees, salaries, titles " +
+                            "WHERE employees.emp_no = salaries.emp_no " +
+                            "AND employees.emp_no = titles.emp_no " +
+                            "AND salaries.to_date = '9999-01-01' " +
+                            "AND titles.to_date = '9999-01-01' " +
+                            "AND titles.title = '" + titleRole + "' " +
+                            "ORDER BY employees.emp_no ASC";
+
+            ResultSet rset = stmt.executeQuery(strSelect);
+            ArrayList<Employee> employees = new ArrayList<Employee>();
+
+            while (rset.next()) {
+                Employee emp = new Employee();
+                emp.emp_no = rset.getInt("emp_no");
+                emp.first_name = rset.getString("first_name");
+                emp.last_name = rset.getString("last_name");
+                emp.salary = rset.getInt("salary");
+                emp.title = titleRole;
+                employees.add(emp);
+            }
+            return employees;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee details by role");
+            return null;
+        }
+    }
+
     /**
      * Displays an employee's details to the console.
      */
@@ -123,13 +164,16 @@ public class App {
         // Connect to database
         a.connect();
 
-        // Get Employee
+        // 1. Get and Display Single Employee
         Employee emp = a.getEmployee(255530);
-
-        // Display results
         a.displayEmployee(emp);
 
-        // Disconnect from database
+        // 2. Get and Display Employees by Role (e.g., "Engineer" or "Manager")
+        List<Employee> engineers = a.getEmployeesByRole("Engineer");
+        // Loop through and print them if you have a display method, or print their sizes to check
+        System.out.println("Found " + engineers.size() + " engineers.");
+
+        // Disconnect from database at the VERY END
         a.disconnect();
     }
 }
