@@ -66,10 +66,7 @@ public class App {
      */
     public Employee getEmployee(int ID) {
         try {
-            // Create an SQL statement
             Statement stmt = con.createStatement();
-
-            // Query for employee details, current title, current salary, current department, and manager
             String strSelect =
                     "SELECT e.emp_no, e.first_name, e.last_name, " +
                             "t.title, s.salary, d.dept_name, " +
@@ -83,10 +80,8 @@ public class App {
                             "LEFT JOIN employees m_emp ON dm.emp_no = m_emp.emp_no " +
                             "WHERE e.emp_no = " + ID;
 
-            // Execute SQL statement
             ResultSet rset = stmt.executeQuery(strSelect);
 
-            // Return new employee if valid
             if (rset.next()) {
                 Employee emp = new Employee();
                 emp.emp_no = rset.getInt("emp_no");
@@ -107,6 +102,9 @@ public class App {
         }
     }
 
+    /**
+     * Gets employees by their job title/role using the specific lab SQL query.
+     */
     public List<Employee> getEmployeesByRole(String titleRole) {
         try {
             Statement stmt = con.createStatement();
@@ -141,7 +139,7 @@ public class App {
     }
 
     /**
-     * Displays an employee's details to the console.
+     * Displays a single employee's details to the console.
      */
     public void displayEmployee(Employee emp) {
         if (emp != null) {
@@ -157,6 +155,23 @@ public class App {
         }
     }
 
+    /**
+     * Prints a list of employee salaries in the formatted column layout matching the lab.
+     */
+    public void printSalaries(List<Employee> employees) {
+        if (employees == null) {
+            System.out.println("No employees found.");
+            return;
+        }
+
+        for (Employee emp : employees) {
+            if (emp == null) continue;
+            String empString = String.format("%-10s %-15s %-20s %-10s",
+                    emp.emp_no, emp.first_name, emp.last_name, emp.salary);
+            System.out.println(empString);
+        }
+    }
+
     public static void main(String[] args) {
         // Create new Application
         App a = new App();
@@ -168,12 +183,11 @@ public class App {
         Employee emp = a.getEmployee(255530);
         a.displayEmployee(emp);
 
-        // 2. Get and Display Employees by Role (e.g., "Engineer" or "Manager")
-        List<Employee> engineers = a.getEmployeesByRole("Engineer");
-        // Loop through and print them if you have a display method, or print their sizes to check
-        System.out.println("Found " + engineers.size() + " engineers.");
+        // 2. Get and Display Employees by Role (e.g., "Engineer") with matching format
+        List<Employee> employees = a.getEmployeesByRole("Engineer");
+        a.printSalaries(employees);
 
-        // Disconnect from database at the VERY END
+        // Disconnect from database at the end
         a.disconnect();
     }
 }
