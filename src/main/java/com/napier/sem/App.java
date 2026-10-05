@@ -131,5 +131,6 @@ public class App {
 
         // Disconnect from database
         a.disconnect();
+        System.out.println("Do something plz");
     }
 }
